@@ -1,0 +1,127 @@
+﻿
+> finance-tracker@1.0.0 build
+> vite build
+
+[36mvite v6.4.1 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 218 modules transformed.
+node.exe : 
+[31mΓ£ù[39m Build 
+failed in 810ms
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ([31mΓ£   
+ ù[39m Build fai    
+led in 810ms:Str    
+ing) [], RemoteE    
+xception
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+[31merror during 
+build:
+[31m[vite]: Rollup 
+failed to resolve 
+import "react-is" 
+from "C:/Users/vanis/
+OneDrive/Desktop/PEPa
+ssignment/Finance_tra
+cker/node_modules/rec
+harts/es6/util/ReactU
+tils.js".
+This is most likely 
+unintended because 
+it can break your 
+application at 
+runtime.
+If you do want to 
+externalize this 
+module explicitly 
+add it to
+`build.rollupOptions.
+external`[31m
+    at viteLog (file:
+///C:/Users/vanis/One
+Drive/Desktop/PEPassi
+gnment/Finance_tracke
+r/node_modules/vite/d
+ist/node/chunks/dep-D
+4NMHUTW.js:46374:15)
+    at file:///C:/Use
+rs/vanis/OneDrive/Des
+ktop/PEPassignment/Fi
+nance_tracker/node_mo
+dules/vite/dist/node/
+chunks/dep-D4NMHUTW.j
+s:46432:18
+    at onwarn (file:/
+//C:/Users/vanis/OneD
+rive/Desktop/PEPassig
+nment/Finance_tracker
+/node_modules/@vitejs
+/plugin-react/dist/in
+dex.js:90:7)
+    at file:///C:/Use
+rs/vanis/OneDrive/Des
+ktop/PEPassignment/Fi
+nance_tracker/node_mo
+dules/vite/dist/node/
+chunks/dep-D4NMHUTW.j
+s:46430:7
+    at onRollupLog (f
+ile:///C:/Users/vanis
+/OneDrive/Desktop/PEP
+assignment/Finance_tr
+acker/node_modules/vi
+te/dist/node/chunks/d
+ep-D4NMHUTW.js:46422:
+5)
+    at onLog (file://
+/C:/Users/vanis/OneDr
+ive/Desktop/PEPassign
+ment/Finance_tracker/
+node_modules/vite/dis
+t/node/chunks/dep-D4N
+MHUTW.js:46072:7)
+    at file:///C:/Use
+rs/vanis/OneDrive/Des
+ktop/PEPassignment/Fi
+nance_tracker/node_mo
+dules/rollup/dist/es/
+shared/node-entry.js:
+20958:32
+    at Object.logger 
+[as onLog] (file:///C
+:/Users/vanis/OneDriv
+e/Desktop/PEPassignme
+nt/Finance_tracker/no
+de_modules/rollup/dis
+t/es/shared/node-entr
+y.js:22945:9)
+    at ModuleLoader.h
+andleInvalidResolvedI
+d (file:///C:/Users/v
+anis/OneDrive/Desktop
+/PEPassignment/Financ
+e_tracker/node_module
+s/rollup/dist/es/shar
+ed/node-entry.js:2168
+9:26)
+    at file:///C:/Use
+rs/vanis/OneDrive/Des
+ktop/PEPassignment/Fi
+nance_tracker/node_mo
+dules/rollup/dist/es/
+shared/node-entry.js:
+21647:26[39m
