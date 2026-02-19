@@ -57,9 +57,13 @@ export default function LoginScreen({ onLogin, theme, themeColors: t }) {
             }
         } catch (e) {
             shake();
+            if (e.code === "auth/email-not-verified") {
+                setMode("verify");
+                return;
+            }
             // 4. Firebase Error Mapping
-            console.error("Auth Error:", e.code);
-            let msg = "Authentication failed.";
+            console.error("Auth Error:", e.code, e.message);
+            let msg = e.message || "Authentication failed.";
             if (e.code === "auth/email-already-in-use") msg = "This email is already registered.";
             if (e.code === "auth/invalid-email") msg = "Invalid email format.";
             if (e.code === "auth/weak-password") msg = "Password is too weak.";
@@ -111,6 +115,9 @@ export default function LoginScreen({ onLogin, theme, themeColors: t }) {
         @keyframes spin{to{transform:rotate(360deg)}}
         input:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #0d1b2a inset!important;-webkit-text-fill-color:#f0f4ff!important;}
         .login-card{width:100%;max-width:400px;}
+        @media (max-width: 480px) {
+            .login-card { max-width: 100% !important; }
+        }
         button { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; }
         button:hover { 
             transform: translateY(-2px); 

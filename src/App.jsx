@@ -15,41 +15,9 @@ export default function App() {
 
     const [showGif, setShowGif] = useState(false);
 
-    // Listen for Auth State Changes
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                const mapped = mapUser(firebaseUser);
-                setUser(mapped);
-                if (firebaseUser.emailVerified && showLogin) {
-                    handleLogin(mapped);
-                }
-            } else {
-                setUser(null);
-            }
-        });
-        return unsubscribe;
-    }, [showLogin]);
-
-    // Polling for email verification
-    useEffect(() => {
-        let interval;
-        if (user && !user.emailVerified) {
-            interval = setInterval(async () => {
-                await auth.currentUser?.reload();
-                if (auth.currentUser?.emailVerified) {
-                    const updatedUser = mapUser(auth.currentUser);
-                    setUser(updatedUser);
-                    handleLogin(updatedUser);
-                    clearInterval(interval);
-                }
-            }, 3000);
-        }
-        return () => clearInterval(interval);
-    }, [user, showLogin]);
-
     const t = themes[theme];
 
+    // Define callbacks BEFORE the useEffect hooks that reference them
     const handleLogin = useCallback((u) => {
         setTransDir("in");
         setTrans(true);
@@ -70,6 +38,39 @@ export default function App() {
     }, []);
 
     const handleSignIn = useCallback(() => { setShowLogin(true); }, []);
+
+    // Listen for Auth State Changes
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                const mapped = mapUser(firebaseUser);
+                setUser(mapped);
+                if (firebaseUser.emailVerified && showLogin) {
+                    handleLogin(mapped);
+                }
+            } else {
+                setUser(null);
+            }
+        });
+        return unsubscribe;
+    }, [showLogin, handleLogin]);
+
+    // Polling for email verification
+    useEffect(() => {
+        let interval;
+        if (user && !user.emailVerified) {
+            interval = setInterval(async () => {
+                await auth.currentUser?.reload();
+                if (auth.currentUser?.emailVerified) {
+                    const updatedUser = mapUser(auth.currentUser);
+                    setUser(updatedUser);
+                    handleLogin(updatedUser);
+                    clearInterval(interval);
+                }
+            }, 3000);
+        }
+        return () => clearInterval(interval);
+    }, [user, showLogin, handleLogin]);
 
     return (
         <>
@@ -98,7 +99,7 @@ export default function App() {
                 minHeight: "100vh",
             }}>
                 <Dashboard
-                    user={user}
+                    user={user || null}
                     onLogout={handleLogout} // Trigger transition & clear user
                     onSignIn={handleSignIn}
                     theme={theme}

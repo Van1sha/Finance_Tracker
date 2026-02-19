@@ -36,22 +36,39 @@ export default function Dashboard({ user, onLogout, onSignIn, theme, themeColors
     const uid = user ? user.uid : GUEST_UID;
 
     useEffect(() => {
-        const txns = transactionStore.seedIfEmpty(uid);
-        setTransactions(txns);
-    }, [uid]);
+        const initData = async () => {
+            if (isGuest) {
+                // Use local demo data for guests — don't touch Firestore
+                setTransactions([
+                    { id: "d1", title: "Salary", amount: 5000, type: "income", category: "Salary", date: "2025-02-01" },
+                    { id: "d2", title: "Freelance Project", amount: 2500, type: "income", category: "Freelance", date: "2025-02-05" },
+                    { id: "d3", title: "Rent", amount: 400, type: "expense", category: "Housing", date: "2025-02-01" },
+                    { id: "d4", title: "Groceries", amount: 120, type: "expense", category: "Food", date: "2025-02-03" },
+                    { id: "d5", title: "Electric Bill", amount: 85, type: "expense", category: "Utilities", date: "2025-02-04" },
+                    { id: "d6", title: "Gym Membership", amount: 45, type: "expense", category: "Health", date: "2025-02-06" },
+                    { id: "d7", title: "Netflix", amount: 15, type: "expense", category: "Entertainment", date: "2025-02-07" },
+                    { id: "d8", title: "Uber Rides", amount: 60, type: "expense", category: "Transport", date: "2025-02-08" },
+                ]);
+                return;
+            }
+            const txns = await transactionStore.seedIfEmpty(uid);
+            setTransactions(txns);
+        };
+        initData();
+    }, [uid, isGuest]);
 
-    const reload = () => setTransactions(transactionStore.list(uid));
+    const reload = async () => setTransactions(await transactionStore.list(uid));
 
-    const handleSave = (data) => {
+    const handleSave = async (data) => {
         if (isGuest) return;
-        if (data.id) transactionStore.update(uid, data.id, data);
-        else transactionStore.add(uid, data);
-        reload();
+        if (data.id) await transactionStore.update(uid, data.id, data);
+        else await transactionStore.add(uid, data);
+        await reload();
         setShowForm(false);
         setEditingTxn(null);
     };
 
-    const handleDelete = (id) => { if (isGuest) return; transactionStore.remove(uid, id); reload(); };
+    const handleDelete = async (id) => { if (isGuest) return; await transactionStore.remove(uid, id); await reload(); };
     const handleEdit = (txn) => { if (isGuest) return; setEditingTxn(txn); setShowForm(true); };
 
     const handleTabChange = (tab) => {
@@ -62,6 +79,22 @@ export default function Dashboard({ user, onLogout, onSignIn, theme, themeColors
     };
 
     const handleReset = () => { setTransactions([]); };
+
+    const handleExport = () => {
+        if (transactions.length === 0) return;
+        const headers = ["Title", "Amount (₹)", "Type", "Category", "Date"];
+        const rows = transactions.map(tx => [
+            `"${tx.title}"`, tx.amount, tx.type, tx.category, tx.date
+        ]);
+        const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `fintrack_transactions_${new Date().toISOString().split("T")[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     const filtered = useMemo(() => {
         let list = [...transactions];
@@ -115,6 +148,13 @@ export default function Dashboard({ user, onLogout, onSignIn, theme, themeColors
         @keyframes guestBannerIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
         .dashboard-main { flex: 1; padding: 32px 36px; max-width: 1000px; margin: 0 auto; width: 100%; position: relative; z-index: 1; }
         @media (max-width: 768px) { .dashboard-main { padding: 18px 14px; } }
+        @media (max-width: 640px) {
+            .fab-btn { width: 50px !important; height: 50px !important; bottom: 24px !important; right: 18px !important; font-size: 22px !important; border-radius: 14px !important; }
+            .guest-banner { flex-direction: column; text-align: center; gap: 12px !important; padding: 12px 16px !important; }
+            .unlock-card { padding: 28px 22px !important; max-width: 340px !important; }
+            .unlock-card .unlock-icon { font-size: 44px !important; }
+            .unlock-card .unlock-title { font-size: 22px !important; }
+        }
         
         button {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -175,46 +215,91 @@ export default function Dashboard({ user, onLogout, onSignIn, theme, themeColors
                     </div>
                 )}
 
-                <main className="dashboard-main">
-                    <div style={{ animation: "fadeSlideIn 0.5s ease 0.1s both", marginBottom: 28 }}>
-                        <div style={{ fontSize: 12, color: "#60a5fa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>
-                            ✦ {activeTab === "dashboard" ? "Financial Overview" : "All Transactions"}
+                <main className="dashboard-main" style={{ position: "relative" }}>
+                    <div style={{
+                        filter: isGuest ? "blur(12px)" : "none",
+                        pointerEvents: isGuest ? "none" : "auto",
+                        transition: "filter 0.5s ease",
+                    }}>
+                        <div style={{ animation: "fadeSlideIn 0.5s ease 0.1s both", marginBottom: 28 }}>
+                            <div style={{ fontSize: 12, color: "#60a5fa", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>
+                                ✦ {activeTab === "dashboard" ? "Financial Overview" : "All Transactions"}
+                            </div>
+                            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(24px, 5vw, 34px)", fontWeight: 700, marginBottom: 4 }}>
+                                {activeTab === "dashboard"
+                                    ? <>Welcome{user ? `, ${user.name.split(" ")[0]}` : ""}<span style={{ color: "#3b82f6" }}>.</span></>
+                                    : <>Your Transactions<span style={{ color: "#3b82f6" }}>.</span></>}
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                                <div style={{ fontSize: 13, color: t.textMuted }}>
+                                    {activeTab === "dashboard"
+                                        ? `${transactions.length} transactions${isGuest ? " · Demo data" : ""}`
+                                        : `${filtered.length} of ${transactions.length} entries shown`}
+                                </div>
+                                {!isGuest && transactions.length > 0 && (
+                                    <button onClick={handleExport} style={{
+                                        padding: "6px 14px", borderRadius: 8, border: `1px solid ${t.border}`,
+                                        background: t.bgCard, color: t.textSecondary, fontSize: 12, fontWeight: 600,
+                                        cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                                        display: "flex", alignItems: "center", gap: 6,
+                                        backdropFilter: "blur(8px)",
+                                    }}>📥 Export CSV</button>
+                                )}
+                            </div>
                         </div>
-                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(24px, 5vw, 34px)", fontWeight: 700, marginBottom: 4 }}>
-                            {activeTab === "dashboard"
-                                ? <>Welcome{user ? `, ${user.name.split(" ")[0]}` : ""}<span style={{ color: "#3b82f6" }}>.</span></>
-                                : <>Your Transactions<span style={{ color: "#3b82f6" }}>.</span></>}
+
+                        {activeTab === "dashboard" && (
+                            <div style={{ marginBottom: 24 }}>
+                                <SummaryCards transactions={transactions} theme={t} />
+                                <SpendingCharts transactions={transactions} theme={t} />
+                                {!isGuest && (
+                                    <div style={{ maxWidth: 340, marginTop: 24, animation: "fadeSlideIn 0.5s ease 0.6s both" }}>
+                                        <StorageCard theme={t} onReset={handleReset} user={user} />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div style={{ marginBottom: 18, animation: "fadeSlideIn 0.5s ease 0.3s both" }}>
+                            <FilterBar filters={filters} onFilterChange={setFilters} theme={t} disabled={false} />
                         </div>
-                        <div style={{ fontSize: 13, color: t.textMuted }}>
-                            {activeTab === "dashboard"
-                                ? `${transactions.length} transactions${isGuest ? " · Demo data" : ""}`
-                                : `${filtered.length} of ${transactions.length} entries shown`}
+
+                        <div style={{ animation: "fadeSlideIn 0.5s ease 0.4s both" }}>
+                            <TransactionList transactions={filtered} onEdit={handleEdit} onDelete={handleDelete} theme={t} readOnly={isGuest} />
                         </div>
                     </div>
 
-                    {activeTab === "dashboard" && (
-                        <div style={{ marginBottom: 24 }}>
-                            <SummaryCards transactions={transactions} theme={t} />
-                            <SpendingCharts transactions={transactions} theme={t} />
-                            {!isGuest && (
-                                <div style={{ maxWidth: 340, marginTop: 24, animation: "fadeSlideIn 0.5s ease 0.6s both" }}>
-                                    <StorageCard theme={t} onReset={handleReset} />
+                    {/* Unlock Overlay for Guest Mode */}
+                    {isGuest && (
+                        <div style={{
+                            position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                            display: "flex", alignItems: "flex-start", justifyContent: "center",
+                            zIndex: 10, padding: "80px 20px 0"
+                        }}>
+                            <div className="unlock-card" style={{
+                                background: t.modalBg, border: `1px solid ${t.border}`, borderRadius: 24,
+                                padding: "40px 32px", textAlign: "center", maxWidth: 400,
+                                boxShadow: "0 40px 100px rgba(0,0,0,0.5)",
+                                animation: "modalPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both",
+                            }}>
+                                <div className="unlock-icon" style={{ fontSize: 56, marginBottom: 20 }}>🛡️</div>
+                                <div className="unlock-title" style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color: t.text, marginBottom: 10 }}>Unlock Your Dashboard</div>
+                                <div style={{ fontSize: 14, color: t.textMuted, marginBottom: 28, lineHeight: 1.6 }}>
+                                    Sign in now to sync your transactions securely to the cloud and reveal your financial insights.
                                 </div>
-                            )}
+                                <button onClick={onSignIn} style={{
+                                    width: "100%", padding: "14px", borderRadius: 12, border: "none",
+                                    background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                                    color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer",
+                                    boxShadow: "0 10px 30px rgba(59,130,246,0.3)",
+                                }}>Sign In to Unlock Full Access</button>
+                            </div>
                         </div>
                     )}
-
-                    <div style={{ marginBottom: 18, animation: "fadeSlideIn 0.5s ease 0.3s both" }}>
-                        <FilterBar filters={filters} onFilterChange={setFilters} theme={t} disabled={false} />
-                    </div>
-
-                    <div style={{ animation: "fadeSlideIn 0.5s ease 0.4s both" }}>
-                        <TransactionList transactions={filtered} onEdit={handleEdit} onDelete={handleDelete} theme={t} readOnly={isGuest} />
-                    </div>
                 </main>
 
                 {!isGuest && (
-                    <button onClick={() => { setEditingTxn(null); setShowForm(true); }} style={{
+                    <button className="fab-btn" onClick={() => { setEditingTxn(null); setShowForm(true); }} style={{
                         position: "fixed", bottom: 48, right: 32, width: 58, height: 58, borderRadius: 16,
                         border: "none", background: "linear-gradient(135deg, #3b82f6, #1d4ed8)", color: "white",
                         fontSize: 26, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
@@ -271,6 +356,22 @@ export default function Dashboard({ user, onLogout, onSignIn, theme, themeColors
                     )}
                 </div>
             )}
+
+            {/* Footer */}
+            <footer style={{
+                textAlign: "center", padding: "20px 16px",
+                borderTop: `1px solid ${t.border}`,
+                background: t.navBg, backdropFilter: "blur(12px)",
+                fontFamily: "'DM Sans', sans-serif", position: "relative", zIndex: 1,
+            }}>
+                <div style={{ fontSize: 12, color: t.textMuted, lineHeight: 1.8 }}>
+                    © {new Date().getFullYear()} <span style={{ fontWeight: 700, color: t.textSecondary }}>FinTrack</span> — Built by{" "}
+                    <span style={{ fontWeight: 700, color: "#10b981" }}>Vanisha</span>
+                </div>
+                <div style={{ fontSize: 11, color: t.textFaint, marginTop: 4 }}>
+                    Licensed under the <span style={{ fontWeight: 600 }}>MIT License</span>
+                </div>
+            </footer>
         </>
     );
 }

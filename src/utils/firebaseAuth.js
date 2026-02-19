@@ -30,19 +30,29 @@ export async function firebaseSignUp(name, email, password) {
         await sendEmailVerification(user, actionCodeSettings);
     } catch (verifyError) {
         console.error("Verification Email Error:", verifyError);
-        // We don't throw here so the user is still created, but we should let them know
-        throw new Error("User created, but failed to send verification email. " + verifyError.message);
+        // Map common errors for better debugging
+        let errorMsg = "User created, but failed to send verification email.";
+        if (verifyError.code === 'auth/too-many-requests') {
+            errorMsg += " Too many requests. Please try again later.";
+        } else if (verifyError.code === 'auth/unauthorized-domain') {
+            errorMsg += " This domain is not authorized in Firebase Console.";
+        } else {
+            errorMsg += " Error code: " + (verifyError.code || "unknown") + ". " + verifyError.message;
+        }
+        throw new Error(errorMsg);
     }
 
     return mapUser(user);
 }
 
 /**
- * Signs in an existing user directly.
+ * Signs in an existing user and enforces email verification.
  */
 export async function firebaseLogin(email, password) {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return mapUser(userCredential.user);
+    const user = userCredential.user;
+    // No email verification check — existing users can log in directly
+    return mapUser(user);
 }
 
 /**
@@ -54,7 +64,22 @@ export async function resendVerification() {
             url: window.location.origin,
             handleCodeInApp: true,
         };
-        await sendEmailVerification(auth.currentUser, actionCodeSettings);
+        try {
+            await sendEmailVerification(auth.currentUser, actionCodeSettings);
+        } catch (e) {
+            console.error("Resend Verification Error:", e);
+            let msg = "Failed to resend verification link.";
+            if (e.code === 'auth/too-many-requests') {
+                msg = "Please wait a moment before trying again (Too many requests).";
+            } else if (e.code === 'auth/unauthorized-domain') {
+                msg = "Domain not authorized in Firebase Console.";
+            } else {
+                msg += " " + (e.code || e.message);
+            }
+            throw new Error(msg);
+        }
+    } else {
+        throw new Error("No user is currently signed in to resend verification.");
     }
 }
 

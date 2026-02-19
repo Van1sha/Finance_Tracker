@@ -5,8 +5,20 @@ export default function SummaryCards({ transactions, theme: t }) {
     const [mounted, setMounted] = useState(false);
     useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
 
-    const income = transactions.filter(tx => tx.type === "income").reduce((s, tx) => s + tx.amount, 0);
-    const expense = transactions.filter(tx => tx.type === "expense").reduce((s, tx) => s + tx.amount, 0);
+    // Safe income / expense calculation
+    let income = 0;
+    let expense = 0;
+
+    for (const tx of transactions) {
+        const amount = Number(tx.amount) || 0;
+
+        if (tx.type === "income") {
+            income += amount;
+        } else if (tx.type === "expense") {
+            expense += amount;
+        }
+    }
+
     const balance = income - expense;
 
     const cards = [
@@ -22,14 +34,19 @@ export default function SummaryCards({ transactions, theme: t }) {
                 .summary-card {
                     position: relative; overflow: hidden; border-radius: 28px; padding: 32px 28px;
                     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer;
-                    display: flex; flexDirection: column; justify-content: space-between; min-height: 180px;
+                    display: flex; flex-direction: column; justify-content: space-between; min-height: 180px;
                 }
                 .summary-card:hover { transform: translateY(-12px); box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
                 .summary-card::before {
                     content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.1);
                     backdrop-filter: blur(8px); z-index: 1;
                 }
-                @media (max-width: 768px) { .summary-grid { grid-template-columns: 1fr; gap: 18px; } }
+                @media (max-width: 768px) { .summary-grid { grid-template-columns: 1fr; gap: 14px; } }
+                @media (max-width: 768px) {
+                    .summary-card { padding: 22px 20px !important; min-height: 140px !important; border-radius: 20px !important; }
+                    .summary-value { font-size: 26px !important; }
+                    .summary-icon { font-size: 28px !important; }
+                }
             `}</style>
             <div className="summary-grid">
                 {cards.map((c, i) => (
@@ -48,7 +65,7 @@ export default function SummaryCards({ transactions, theme: t }) {
 
                         <div style={{ position: "relative", zIndex: 2 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                                <div style={{ fontSize: 36, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))" }}>{c.icon}</div>
+                                <div className="summary-icon" style={{ fontSize: 36, filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))" }}>{c.icon}</div>
                                 <div style={{
                                     background: "rgba(255,255,255,0.15)", padding: "5px 12px", borderRadius: 12,
                                     fontSize: 10, fontWeight: 800, color: "white", letterSpacing: 1.5,
@@ -57,11 +74,13 @@ export default function SummaryCards({ transactions, theme: t }) {
                             </div>
 
                             <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 3, color: "rgba(255,255,255,0.8)", marginBottom: 8, fontWeight: 700 }}>{c.label}</div>
-                            <div style={{
+                            <div className="summary-value" style={{
                                 fontFamily: "'Outfit', sans-serif", fontSize: 34, fontWeight: 800, color: "white",
                                 letterSpacing: -1, textShadow: "0 2px 10px rgba(0,0,0,0.1)"
                             }}>
-                                {c.prefix}{Math.abs(c.value).toLocaleString("en-IN")}
+                                {c.label === "Total Balance"
+                                    ? `₹${c.value.toLocaleString("en-IN")}`
+                                    : `${c.prefix}${Math.abs(c.value).toLocaleString("en-IN")}`}
                             </div>
 
                             <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 8 }}>

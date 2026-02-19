@@ -42,6 +42,12 @@ export default function TransactionList({ transactions, onEdit, onDelete, theme:
                 .action-btn { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; opacity: 0.7; }
                 .action-btn:hover { opacity: 1; transform: scale(1.1); filter: brightness(1.2); }
                 .action-btn:active { transform: scale(0.9); }
+                @media (max-width: 640px) {
+                    .txn-card { padding: 14px 16px !important; border-radius: 14px !important; flex-wrap: wrap; gap: 12px; }
+                    .txn-card .txn-icon { width: 42px !important; height: 42px !important; border-radius: 12px !important; font-size: 20px !important; }
+                    .txn-amount { font-size: 16px !important; }
+                    .txn-title { font-size: 14px !important; }
+                }
             `}</style>
 
             <div className="txn-grid">
@@ -62,17 +68,17 @@ export default function TransactionList({ transactions, onEdit, onDelete, theme:
                             transform: deletingId === txn.id ? "scale(0.9) translateY(10px)" : "none",
                         }}
                     >
-                        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-                            <div style={{
+                        <div style={{ display: "flex", alignItems: "center", gap: 18, flex: 1, minWidth: 0 }}>
+                            <div className="txn-icon" style={{
                                 width: 52, height: 52, borderRadius: 15,
-                                background: txn.type === "income" ? "rgba(16,185,129,0.12)" : "rgba(251,191,36,0.12)",
-                                border: `1px solid ${txn.type === "income" ? "rgba(16,185,129,0.25)" : "rgba(251,191,36,0.25)"}`,
+                                background: txn.type === "income" ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+                                border: `1px solid ${txn.type === "income" ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.25)"}`,
                                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24,
                             }}>
                                 {catIcons[txn.category] || "✨"}
                             </div>
                             <div>
-                                <div style={{ fontSize: 16, fontWeight: 700, color: t.textSecondary, marginBottom: 2 }}>{txn.title}</div>
+                                <div className="txn-title" style={{ fontSize: 16, fontWeight: 700, color: t.textSecondary, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{txn.title}</div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <span style={{ fontSize: 11, color: t.textFaint, textTransform: "uppercase", letterSpacing: 1.5 }}>{txn.category}</span>
                                     <span style={{ width: 4, height: 4, borderRadius: "50%", background: t.border }}></span>
@@ -83,10 +89,10 @@ export default function TransactionList({ transactions, onEdit, onDelete, theme:
 
                         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
                             <div style={{ textAlign: "right" }}>
-                                <div style={{
+                                <div className="txn-amount" style={{
                                     fontSize: 18,
                                     fontWeight: 800,
-                                    color: txn.type === "income" ? "#10b981" : "#f59e0b",
+                                    color: txn.type === "income" ? "#10b981" : "#ef4444",
                                     fontFamily: "'DM Sans', sans-serif",
                                     marginBottom: 2
                                 }}>
