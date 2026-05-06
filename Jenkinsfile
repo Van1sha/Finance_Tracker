@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'finance-tracker-app'
         CONTAINER_NAME = 'finance-tracker-container'
-        PORT = '8080' // Host port where the app will be accessible
+        PORT = '80' // Host port where the app will be accessible
     }
 
     stages {
