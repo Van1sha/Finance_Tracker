@@ -93,7 +93,7 @@ docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
 
 ## Phase 4: Configure Jenkins via the Web UI
 
-1. Open your web browser and navigate to: `http://16.171.9.72:8080`
+1. Open your web browser and navigate to: `http://54.144.62.199:8080`
 2. Paste the password you copied in the previous step and click **Continue**.
 3. Click **Install suggested plugins** and wait for the installation to finish.
 4. Create your First Admin User when prompted.
